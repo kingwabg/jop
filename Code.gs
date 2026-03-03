@@ -20,6 +20,8 @@ function onOpen() {
     .addItem('새 일지 만들기 (템플릿 기반)', 'createNewJournal')
     .addItem('현재 내용 저장', 'saveCurrentDataMenu')
     .addItem('인쇄 설정 적용', 'applyPrintSettingsMenu')
+    .addSeparator()
+    .addItem('🔄 출석부 연동 (현재 시트에 출석 가져오기)', 'syncAttendanceMenu')
     .addToUi();
 }
 
@@ -113,9 +115,14 @@ function applyData(sheet, data, recordLabel) {
   sheet.getRange('F3').setValue(data.opTime  || '09:00~18:00');
   sheet.getRange('J3').setValue(data.manager || '');
 
-  // 아동 현황 배치 쓰기
-  sheet.getRange('C7:H7').setValues([ fillArr(data.male,   6) ]);
-  sheet.getRange('C8:H8').setValues([ fillArr(data.female, 6) ]);
+  // 아동 현황 배치 쓰기 (요청: 남 C8:E8, 여 C9:E9)
+  // 원래 male/femaleStats는 [미취학, 탈학교, 초, 중, 고, 기타] 순서이므로
+  // 초, 중, 고에 해당하는 index 2, 3, 4를 사용합니다.
+  var mStats = data.male || [0,0,0,0,0,0];
+  var fStats = data.female || [0,0,0,0,0,0];
+  
+  sheet.getRange('C8:E8').setValues([[ mStats[2], mStats[3], mStats[4] ]]);
+  sheet.getRange('C9:E9').setValues([[ fStats[2], fStats[3], fStats[4] ]]);
 
   // 급식
   var m = data.meals || [0,0,0];
@@ -253,6 +260,15 @@ function createAndRegister(formData) {
     }
 
     var data = blankData(date, '09:00~18:00', mgr);
+
+    // 자동 출석/현황 연동 (B4 날짜 기준)
+    var attResult = getAttendanceData(date);
+    if (attResult) {
+      data.att = attResult.att;
+      data.male = attResult.male;
+      data.female = attResult.female;
+    }
+
     applyData(disp, data, recLbl);
     applyPrintSettings(disp, {top:1.5,bottom:1.5,left:1.5,right:1.5});
     ss.setActiveSheet(disp);
@@ -325,7 +341,7 @@ function saveCurrentData(title) {
 
     // 저장할 때도 제목 형식을 한글 일자로 강제 변환 (구글 시트의 자동 날짜 변환 방지)
     var formattedTitle = makeTitleFromDate(title);
-    
+
     var data   = extractData(disp);
     var now    = new Date();
     var json   = JSON.stringify(data);
@@ -337,7 +353,7 @@ function saveCurrentData(title) {
     } else {
       store.appendRow([formattedTitle,toDateStr(data.date),data.manager,recType,data.opTime,now,json]);
     }
-    SpreadsheetApp.flush(); 
+    SpreadsheetApp.flush();
     var list = buildList(store);
     PropertiesService.getDocumentProperties().setProperty('activeTitle', formattedTitle);
     return { ok:true, name:formattedTitle, list:list };
@@ -449,8 +465,8 @@ function createFromTemplate(formData) {
 
     // 3) 날짜·담당자만 폼 값으로 덮어쓰기
     if (date) {
-      disp.getRange('B3').setNumberFormat('@');  // 날짜 자동변환 방지
-      disp.getRange('B3').setValue(date);
+      disp.getRange('B4').setNumberFormat('@');  // 날짜 자동변환 방지
+      disp.getRange('B4').setValue(date);
     }
     if (mgr) disp.getRange('J3').setValue(mgr);
 
@@ -468,6 +484,18 @@ function createFromTemplate(formData) {
 
     // 5) 인쇄 설정 (실패해도 생성에 영향 없음)
     try { applyPrintSettings(disp, {top:1.5, bottom:1.5, left:1.5, right:1.5}); } catch(e) {}
+
+    // 자동 출석 연동
+    if (date) {
+      var attResult = getAttendanceData(date);
+      if (attResult && !attResult.error) {
+        disp.getRange('A18:G18').setValues([ attResult.att ]);
+        // 남: C8:E8 (초, 중, 고)
+        disp.getRange('C8:E8').setValues([[ attResult.male[2], attResult.male[3], attResult.male[4] ]]);
+        // 여: C9:E9 (초, 중, 고)
+        disp.getRange('C9:E9').setValues([[ attResult.female[2], attResult.female[3], attResult.female[4] ]]);
+      }
+    }
 
     SpreadsheetApp.flush();
     ss.setActiveSheet(disp);
@@ -520,12 +548,12 @@ function makeTitleFromDate(val) {
   try {
     var d = (val instanceof Date) ? val : new Date(val);
     if (isNaN(d.getTime())) return String(val); // 변환 불가시 그대로
-    
+
     var m = d.getMonth() + 1;
     var day = d.getDate();
     var days = ['일','월','화','수','목','금','토'];
     var wd = days[d.getDay()];
-    
+
     return m + '월 ' + day + '일 ' + wd;
   } catch(e) { return String(val); }
 }
@@ -568,6 +596,187 @@ function getPrintSettings() {
   } catch(e) { return { ok:false, top:1.5, bottom:1.5, left:1.5, right:1.5 }; }
 }
 function cmFromPt(pt) { return (pt==null)?1.5:Math.round((pt/28.3465)*10)/10; }
+
+// ══════════════════════════════════════════════════════════════
+//  출석부 연동 기능
+// ══════════════════════════════════════════════════════════════
+
+function getAttendanceSheet(ss) {
+  var s = ss.getSheetByName('26년 출석체크');
+  if (s) return s;
+  var sheets = ss.getSheets();
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].getName().indexOf('출석체크') >= 0) {
+      return sheets[i];
+    }
+  }
+  return null;
+}
+
+function getAttendanceData(dateVal) {
+  if (!dateVal) return null;
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var attSheet = getAttendanceSheet(ss);
+
+  if (!attSheet) {
+    return { error: '"26년 출석체크" 시트를 찾을 수 없습니다.' };
+  }
+
+  // 1. 운영일지 날짜 파싱 (연, 월, 일 추출)
+  var targetDate = null;
+  if (dateVal instanceof Date) {
+    targetDate = dateVal;
+  } else {
+    var dateStr = String(dateVal);
+    // "2026. 1. 2" 또는 "2026년 1월 2일" 등에서 숫자만 추출
+    var nums = dateStr.match(/\d+/g);
+    if (nums && nums.length >= 3) {
+      // 월은 0부터 시작하므로 1을 뺌
+      targetDate = new Date(nums[0], Number(nums[1]) - 1, nums[2]);
+    }
+  }
+
+  if (!targetDate || isNaN(targetDate.getTime())) {
+    return { error: '운영일지의 날짜 형식을 인식할 수 없습니다: ' + dateVal };
+  }
+
+  var tYear = targetDate.getFullYear();
+  var tMonth = targetDate.getMonth() + 1;
+  var tDay = targetDate.getDate();
+
+  // 날짜 행: D46:AH46
+  var datesRowRange = attSheet.getRange('D46:AH46');
+  var datesRowValues = datesRowRange.getValues()[0];
+  var datesRowDisplays = datesRowRange.getDisplayValues()[0]; // 화면에 보이는 텍스트 기준
+  var targetColIndex = -1;
+
+  for (var c = 0; c < datesRowValues.length; c++) {
+    var val = datesRowValues[c];
+    var disp = datesRowDisplays[c];
+    if (!val && !disp) continue;
+
+    var dYear = -1, dMonth = -1, dDay = -1;
+
+    // 우선 데이터 객체인 경우 확인
+    if (val instanceof Date) {
+      dYear = val.getFullYear();
+      dMonth = val.getMonth() + 1;
+      dDay = val.getDate();
+    } else {
+      // 텍스트("2026.1.2")인 경우 숫자만 추출
+      var nums2 = String(disp || val).match(/\d+/g);
+      if (nums2) {
+        if (nums2.length >= 3) {
+          dYear = Number(nums2[0]);
+          dMonth = Number(nums2[1]);
+          dDay = Number(nums2[2]);
+        } else if (nums2.length === 1) {
+          dDay = Number(nums2[0]); // 숫자 하나만 있으면 '일'로 간주
+        }
+      }
+    }
+
+    // 일치 여부 확인 (연/월 정보가 있다면 모두 확인, 없으면 일자만 확인)
+    if (dDay === tDay) {
+      if (dYear !== -1 && dMonth !== -1) {
+        if (dYear === tYear && dMonth === tMonth) {
+          targetColIndex = c;
+          break;
+        }
+      } else {
+        // 연/월 정보가 없는 단순 숫자(1~31)인 경우
+        targetColIndex = c;
+        break;
+      }
+    }
+  }
+
+  if (targetColIndex !== -1) {
+    // D열부터 시작하므로 targetColIndex가 0이면 D열(4)
+    // 출석 체크 라인: D47:AH80 (34명 기준)
+    var attValues = attSheet.getRange(47, 4 + targetColIndex, 34, 1).getValues();
+    // 성별: AM47:AM80
+    var genderValues = attSheet.getRange(47, 39, 34, 1).getValues();
+    // 학교: AN47:AN80
+    var schoolValues = attSheet.getRange(47, 40, 34, 1).getValues();
+
+    var total = 34;
+    var current = 0; // 실제 존재하는 아동 수
+    var attend = 0;
+    var officialAbsent = 0;
+    var altAttend = 0;
+    var absent = 0;
+    var other = 0;
+
+    // 남성 통계: [취학전, 탈학교, 초, 중, 고, 기타]
+    var maleStats = [0, 0, 0, 0, 0, 0];
+    // 여성 통계: [취학전, 탈학교, 초, 중, 고, 기타]
+    var femaleStats = [0, 0, 0, 0, 0, 0];
+
+    for (var r = 0; r < attValues.length; r++) {
+      var gender = String(genderValues[r][0] || '').replace(/\s+/g, '');
+      var school = String(schoolValues[r][0] || '').replace(/\s+/g, '');
+      var attendance = String(attValues[r][0] || '').replace(/\s+/g, '');
+
+      if (!gender) continue; // 성별 정보도 없으면 아동 데이터가 없는 것으로 간주
+
+      current++;
+
+      // 출석 통계 (결석, 공결 외에는 전부 출결 카운트)
+      if (attendance === '결석') absent++;
+      else if (attendance === '공결') officialAbsent++;
+      else attend++; // 결석/공결 아니면 모두 출석으로 카운트
+
+      // 성별 및 학교별 현황 카운트
+      var stats = (gender === '남') ? maleStats : femaleStats;
+
+      if (school.indexOf('초') >= 0) stats[2]++;
+      else if (school.indexOf('중') >= 0) stats[3]++;
+      else if (school.indexOf('고') >= 0) stats[4]++;
+      else if (school.indexOf('미취학') >= 0 || school.indexOf('전') >= 0) stats[0]++;
+      else if (school.indexOf('탈') >= 0) stats[1]++;
+      else stats[5]++;
+    }
+
+    return {
+      att: [total, current, attend, officialAbsent, altAttend, absent, other],
+      male: maleStats,
+      female: femaleStats
+    };
+  }
+
+  return { error: '출석부 46행에서 해당 날짜를 찾을 수 없습니다. (운영일지 날짜: ' + tYear + '년 ' + tMonth + '월 ' + tDay + '일)' };
+}
+
+function syncAttendanceMenu() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var disp = ss.getActiveSheet();
+  var titleCell = disp.getRange('A1').getValue();
+  if (String(titleCell).indexOf('운영일지') === -1) {
+    SpreadsheetApp.getUi().alert('현재 시트가 운영일지가 아닙니다. 운영일지 시트를 열어주세요.');
+    return;
+  }
+
+  var dateStr = disp.getRange('B4').getDisplayValue();
+  if (!dateStr) {
+    SpreadsheetApp.getUi().alert('운영일지에 날짜가 입력되어 있지 않습니다. (B4:D4 셀 확인)');
+    return;
+  }
+
+  var result = getAttendanceData(dateStr);
+  if (result && !result.error) {
+    disp.getRange('A18:G18').setValues([ result.att ]);
+    // 남: C8:E8 (초, 중, 고)
+    disp.getRange('C8:E8').setValues([[ result.male[2], result.male[3], result.male[4] ]]);
+    // 여: C9:E9 (초, 중, 고)
+    disp.getRange('C9:E9').setValues([[ result.female[2], result.female[3], result.female[4] ]]);
+    
+    SpreadsheetApp.getUi().alert('출석 및 아동현황 연동 완료!\n\n[출석 통계]\n출석: ' + result.att[2] + '\n결석: ' + result.att[5] + '\n공결: ' + result.att[3] + '\n\n[아동 현황]\n남아(초/중/고): ' + result.male[2] + '/' + result.male[3] + '/' + result.male[4] + '\n여아(초/중/고): ' + result.female[2] + '/' + result.female[3] + '/' + result.female[4] + '\n\n자동으로 운영일지에 입력되었습니다.');
+  } else {
+    var msg = (result && result.error) ? result.error : '해당 날짜("' + dateStr + '")의 출석 데이터를 "26년 출석체크" 시트에서 찾을 수 없습니다.\n\n46행의 날짜 형식을 확인해 주세요.';
+    SpreadsheetApp.getUi().alert(msg);
+  }
+}
 
 // ══════════════════════════════════════════════════════════════
 //  인쇄 설정
