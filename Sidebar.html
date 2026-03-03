@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <base target="_top">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --navy: #1a3a5c;
+            --blue: #2563a8;
+            --blue-lt: #e8f0fb;
+            --green: #16a34a;
+            --red: #dc2626;
+            --orange: #ea580c;
+            --border: #dde1e7;
+            --bg: #f0f4f8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 12px;
+            color: #1e293b;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── 헤더 ── */
+        .hdr {
+            background: linear-gradient(135deg, var(--navy), var(--blue));
+            color: #fff;
+            padding: 11px 14px;
+            flex-shrink: 0;
+        }
+
+        .hdr h2 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .hdr p {
+            font-size: 10px;
+            opacity: .7;
+        }
+
+        /* ── 탭 ── */
+        .tabs {
+            display: flex;
+            background: #fff;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 9px 4px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #94a3b8;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all .15s;
+        }
+
+        .tab.on {
+            color: var(--blue);
+            border-bottom-color: var(--blue);
+        }
+
+        /* ── 패널 ── */
+        .tab-pane {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            flex-direction: column;
+        }
+
+        .tab-pane.on {
+            display: flex;
+        }
+
+        .tab-pane::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .tab-pane::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        /* ── 액션 바 ── */
+        .actions {
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 4px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: inherit;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .btn-new {
+            background: var(--blue);
+            color: #fff;
+        }
+
+        .btn-new:hover {
+            background: #1a4a8a;
+        }
+
+        .btn-tmpl {
+            background: #7c3aed;
+            color: #fff;
+        }
+
+        .btn-tmpl:hover {
+            background: #5b21b6;
+        }
+
+        .btn-save {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            background: #138a3a;
+        }
+
+        .btn-sm {
+            background: #fff;
+            color: #64748b;
+            border: 1px solid var(--border);
+            flex: 0;
+            padding: 8px 10px;
+            border-radius: 6px;
+        }
+
+        .btn-sm:hover {
+            background: #f1f5f9;
+            color: var(--blue);
+        }
+
+        .btn:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+        }
+
+        /* ── 검색 ── */
+        .search {
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .search input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 6px 8px 6px 28px;
+            font-size: 11px;
+            font-family: inherit;
+            outline: none;
+            background: #f8fafc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aaa' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 8px center;
+        }
+
+        .search input:focus {
+            border-color: var(--blue);
+            background: #fff;
+        }
+
+        .cnt {
+            padding: 4px 10px;
+            font-size: 10px;
+            color: #94a3b8;
+            border-bottom: 1px solid #eef1f5;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        /* ── 목록 아이템 ── */
+        .list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+
+        .item {
+            padding: 9px 10px;
+            border-bottom: 1px solid #f0f3f7;
+            cursor: pointer;
+            transition: background .1s;
+            background: #fff;
+        }
+
+        .item:hover {
+            background: #f5f8ff;
+        }
+
+        .item.active {
+            background: var(--blue-lt);
+            border-left: 3px solid var(--blue);
+            padding-left: 7px;
+        }
+
+        .item-date {
+            font-size: 10px;
+            color: #aaa;
+            margin-bottom: 1px;
+        }
+
+        .item-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 210px;
+        }
+
+        .item-meta {
+            font-size: 10px;
+            color: #94a3b8;
+            margin-top: 2px;
+        }
+
+        .item-btns {
+            display: none;
+            gap: 4px;
+            margin-top: 7px;
+        }
+
+        .item.active .item-btns {
+            display: flex;
+        }
+
+        .ibtn {
+            padding: 3px 9px;
+            font-size: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .1s;
+        }
+
+        .ibtn:hover {
+            background: #f1f5f9;
+        }
+
+        .ibtn.del {
+            border-color: #fca5a5;
+            color: var(--red);
+        }
+
+        .ibtn.del:hover {
+            background: #fee2e2;
+        }
+
+        /* ── 빈 상태 ── */
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 16px;
+            color: #c8d0da;
+            text-align: center;
+            gap: 8px;
+        }
+
+        .empty-ico {
+            font-size: 34px;
+        }
+
+        .empty p {
+            font-size: 11px;
+            line-height: 1.8;
+        }
+
+        /* ── 로딩 ── */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            gap: 8px;
+            color: #94a3b8;
+        }
+
+        .spin {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #e2e8f0;
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: sp .7s linear infinite;
+        }
+
+        @keyframes sp {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        /* ══ 인쇄 탭 ══════════════════════════════════════════════ */
+        .sec {
+            padding: 12px;
+            border-bottom: 1px solid #eef1f5;
+            background: #fff;
+        }
+
+        .sec-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 나침반형 여백 시각화 */
+        .compass {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 8px;
+            position: relative;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .compass-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 64px;
+            height: 72px;
+            background: #fff;
+            border: 1.5px solid var(--blue);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: var(--blue);
+            font-weight: 700;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .compass-val {
+            position: absolute;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--navy);
+            background: rgba(255, 255, 255, .92);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 1px 4px;
+        }
+
+        .cv-top {
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cv-bottom {
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .cv-left {
+            left: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .cv-right {
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 여백 슬라이더 */
+        .margin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .margin-item {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .margin-label {
+            font-size: 10px;
+            color: #64748b;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .margin-label span {
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        .margin-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: #e2e8f0;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .margin-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--blue);
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+        }
+
+        .margin-val {
+            font-size: 10px;
+            text-align: center;
+            color: var(--blue);
+            font-weight: 700;
+            margin-top: 3px;
+        }
+
+        /* 프리셋 버튼 */
+        .preset-row {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .preset-btn {
+            padding: 5px 9px;
+            font-size: 10px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .1s;
+            white-space: nowrap;
+        }
+
+        .preset-btn:hover {
+            background: var(--blue-lt);
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .preset-btn.on {
+            background: var(--blue);
+            color: #fff;
+            border-color: var(--blue);
+        }
+
+        /* 적용 버튼 */
+        .apply-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            background: var(--orange);
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .apply-btn:hover {
+            background: #c2440a;
+        }
+
+        .apply-btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        /* 정보 박스 */
+        .info-box {
+            background: var(--blue-lt);
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 9px 11px;
+            font-size: 10px;
+            color: #1e40af;
+            line-height: 1.7;
+            margin-top: 8px;
+        }
+
+        .info-box b {
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+        }
+
+        /* ── 드래그 핸들 ── */
+        #drag-handle {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            cursor: ew-resize;
+            z-index: 9999;
+            background: transparent;
+            transition: background .15s;
+        }
+
+        #drag-handle:hover,
+        #drag-handle.dragging {
+            background: linear-gradient(to right, rgba(37, 99, 168, .35), transparent);
+        }
+
+        #drag-handle::after {
+            content: '⋮⋮';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 10px;
+            color: rgba(37, 99, 168, .5);
+            letter-spacing: -2px;
+            pointer-events: none;
+        }
+
+        /* ── 너비 표시 뱃지 ── */
+        #width-badge {
+            position: fixed;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--blue);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .15s;
+            z-index: 10000;
+            white-space: nowrap;
+        }
+
+        #width-badge.show {
+            opacity: 1;
+        }
+
+        /* ── 상태바 ── */
+        .statusbar {
+            padding: 5px 8px;
+            font-size: 10px;
+            color: #94a3b8;
+            border-top: 1px solid var(--border);
+            background: #fff;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            min-height: 28px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #94a3b8;
+            flex-shrink: 0;
+            transition: background .2s;
+        }
+
+        .dot.ok {
+            background: var(--green);
+        }
+
+        .dot.err {
+            background: var(--red);
+        }
+
+        .dot.loading {
+            background: #f59e0b;
+            animation: blink .8s infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: .3
+            }
+        }
+
+        /* ── 너비 빠른 버튼 ── */
+        .wbtn {
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            color: #64748b;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all .1s;
+            flex-shrink: 0;
+        }
+
+        .wbtn:hover {
+            background: var(--blue-lt);
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .wbtn.on {
+            background: var(--blue);
+            color: #fff;
+            border-color: var(--blue);
+        }
+
+        #statusMsg {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* ── 새 일지 폼 패널 ── */
+        #pane-new {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            background: var(--bg);
+            overflow-y: auto;
+            animation: slideIn .18s ease;
+        }
+
+        #pane-new.show {
+            display: flex;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(18px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .form-hdr {
+            background: #fff;
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .form-hdr-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--navy);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-hdr-back {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 11px;
+            color: #64748b;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .form-hdr-back:hover {
+            background: #f1f5f9;
+        }
+
+        .form-body {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .frow {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .frow.half-row {
+            flex-direction: row;
+            gap: 8px;
+        }
+
+        .frow.half-row>.frow {
+            flex: 1;
+        }
+
+        .flabel {
+            font-size: 11px;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .flabel .req {
+            color: var(--red);
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .finput,
+        .fselect {
+            width: 100%;
+            padding: 7px 9px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: inherit;
+            color: #1e293b;
+            background: #fff;
+            outline: none;
+            transition: border-color .15s, box-shadow .15s;
+        }
+
+        .finput:focus,
+        .fselect:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 168, .1);
+        }
+
+        .fselect {
+            cursor: pointer;
+        }
+
+        .form-submit {
+            margin: 4px 12px 12px;
+            padding: 11px;
+            border-radius: 7px;
+            border: none;
+            background: var(--blue);
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .form-submit:hover {
+            background: #1a4a8a;
+        }
+
+        .form-submit:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .form-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 2px 0;
+        }
+
+        /* ── 손스 배너 (현재 열린 시트) ── */
+        .cur-banner {
+            margin: 8px;
+            padding: 8px 10px;
+            background: var(--blue-lt);
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            font-size: 11px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cur-banner.show {
+            display: flex;
+        }
+
+        .cur-banner .cb-name {
+            flex: 1;
+            font-weight: 700;
+            color: var(--navy);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cur-banner .cb-tag {
+            font-size: 10px;
+            background: var(--blue);
+            color: #fff;
+            border-radius: 3px;
+            padding: 1px 5px;
+            flex-shrink: 0;
+        }
+
+        /* ── 액션 바 개선 ── */
+        .actions {
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            background: #fff;
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-direction: column;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-hint {
+            font-size: 10px;
+            color: #94a3b8;
+            padding: 0 2px;
+            line-height: 1.5;
+        }
+
+        /* ── 성공 안내 카드 ── */
+        #guide-card {
+            display: none;
+            margin: 8px;
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+            border-radius: 8px;
+            padding: 12px;
+            flex-direction: column;
+            gap: 8px;
+            animation: slideIn .2s ease;
+        }
+
+        #guide-card.show {
+            display: flex;
+        }
+
+        .gc-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #166534;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .gc-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .gc-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            font-size: 11px;
+            color: #1e293b;
+            line-height: 1.5;
+        }
+
+        .gc-num {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--green);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .gc-done {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .gc-close {
+            width: 100%;
+            padding: 6px;
+            border-radius: 5px;
+            border: none;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .gc-close:hover {
+            background: #bbf7d0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 드래그 핸들 (사이드바 왼쪽 가장자리) -->
+    <div id="drag-handle" title="좌우로 드래그하여 너비 조절"></div>
+    <div id="width-badge"></div>
+
+    <!-- 헤더 -->
+    <div class="hdr">
+        <h2>📋 운영일지 관리</h2>
+        <p>일지 작성 &middot; 저장 &middot; 인쇄 설정</p>
+    </div>
+
+    <!-- 탭 -->
+    <div class="tabs">
+        <div class="tab on" onclick="switchTab('list',this)">📋 목록</div>
+        <div class="tab" onclick="switchTab('print',this)">🖨 인쇄설정</div>
+    </div>
+
+    <!-- ══ 탭1: 목록 ══════════════════════════════════════════ -->
+    <div class="tab-pane on" id="pane-list">
+
+        <!-- 액션 바 -->
+        <div class="actions">
+            <div class="action-row">
+                <button class="btn btn-tmpl" id="btnTmpl" onclick="onEditTemplate()" title="템플릿 시트 편집">📝 템플릿
+                    수정</button>
+                <button class="btn btn-sm" onclick="loadList()" title="목록 새로고침">🔄</button>
+            </div>
+            <div class="action-row">
+                <button class="btn btn-new" id="btnNew" onclick="onNew()" title="템플릿 기반 새 일지 생성">＋ 새 일지 (템플릿
+                    기반)</button>
+                <button class="btn btn-save" id="btnSave" onclick="onSave()" title="현재 열린 시트를 사이드바 목록에 등록/갱신">🔖
+                    저장</button>
+            </div>
+            <div class="action-hint" id="tmplHint">
+                📌 <b>템플릿 수정</b> → 내용 편집 → <b>새 일지</b> 클릭하면 템플릿 기반으로 생성
+            </div>
+        </div>
+
+        <!-- 템플릿 상태 배너 -->
+        <div class="cur-banner" id="tmplBanner" style="background:#f5f0ff;border-color:#c4b5fd;">
+            <span>📝</span>
+            <span class="cb-name" id="tmplInfo" style="color:#5b21b6;">템플릿 없음</span>
+            <span class="cb-tag" style="background:#7c3aed;">템플릿</span>
+        </div>
+
+        <!-- 현재 열린 시트 배너 -->
+        <div class="cur-banner" id="curBanner">
+            <span>📄</span>
+            <span class="cb-name" id="curName">-</span>
+            <span class="cb-tag">열림</span>
+        </div>
+
+        <!-- 새 일지 성공 안내 카드 -->
+        <div id="guide-card">
+            <div class="gc-title">✅ 일지가 생성되었어요! (템플릿 기반)</div>
+            <div class="gc-steps">
+                <div class="gc-step">
+                    <div class="gc-num gc-done">✓</div>
+                    <div><b>템플릿 기반 일지 생성 완료</b><br><span style="color:#64748b">목록에 자동 등록되었어요</span></div>
+                </div>
+                <div class="gc-step">
+                    <div class="gc-num">2</div>
+                    <div><b>운영일지 시트에서 날짜별 수치 수정</b><br><span style="color:#64748b">프로그램 내용은 이미 복사됨</span></div>
+                </div>
+                <div class="gc-step">
+                    <div class="gc-num">3</div>
+                    <div>
+                        <b>편집 완료 후 "🔖 저장" 클릭</b><br>
+                        <span style="color:#64748b">수정 내용을 목록에 반영합니다</span>
+                    </div>
+                </div>
+            </div>
+            <button class="gc-close" onclick="closeGuide()">(알겠습니다)</button>
+        </div>
+
+        <!-- 검색창 -->
+        <div class="search">
+            <input id="searchInp" placeholder="날짜·이름 검색..." oninput="render()">
+        </div>
+        <div class="cnt" id="cntEl">불러오는 중...</div>
+
+        <!-- 목록 -->
+        <div class="list" id="listEl">
+            <div class="loading">
+                <div class="spin"></div><span>불러오는 중...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ 새 일지 입력 폼 (숨김) ══════════════════════════════ -->
+    <div id="pane-new">
+        <!-- 폼 헤더 -->
+        <div class="form-hdr">
+            <div class="form-hdr-title">📋 새 일지 만들기 (템플릿 기반)</div>
+            <button class="form-hdr-back" onclick="hideNewForm()">← 목록으로</button>
+        </div>
+        <!-- 템플릿 안내 -->
+        <div
+            style="margin:8px 12px 0;padding:8px 10px;background:#f5f0ff;border:1px solid #c4b5fd;border-radius:6px;font-size:10px;color:#5b21b6;line-height:1.6;">
+            📝 <b>템플릿 시트의 내용(프로그램·업무일지 등)이 복사됩니다.</b><br>
+            날짜, 담당자만 새로 입력하면 돼요!
+        </div>
+
+        <!-- 폼 필드 -->
+        <div class="form-body">
+            <!-- 분류 / 기록물 -->
+            <div class="frow half-row">
+                <div class="frow">
+                    <label class="flabel"><span class="req">*</span> 분류</label>
+                    <select class="fselect" id="f_type">
+                        <option value="일지" selected>일지</option>
+                        <option value="보고서">보고서</option>
+                        <option value="기획">기획</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+                <div class="frow">
+                    <label class="flabel"><span class="req">*</span> 기록물</label>
+                    <select class="fselect" id="f_record">
+                        <option value="운영 일지(아동)" selected>운영 일지(아동)</option>
+                        <option value="운영 일지(청소년)">운영 일지(청소년)</option>
+                        <option value="특수 프로그램">특수 프로그램</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-divider"></div>
+
+            <!-- 일자 / 담당자 -->
+            <div class="frow half-row">
+                <div class="frow">
+                    <label class="flabel"><span class="req">*</span> 일자</label>
+                    <input class="finput" type="date" id="f_date" oninput="autoTitle()">
+                </div>
+                <div class="frow">
+                    <label class="flabel"><span class="req">*</span> 담당자</label>
+                    <input class="finput" type="text" id="f_manager" placeholder="이름 입력">
+                </div>
+            </div>
+
+            <!-- 제목 (일자에서 자동 생성, 숫겨짐) -->
+            <input type="hidden" id="f_title">
+            <!-- f_opdate도 필요 없으므로 제거 (코드에서 date로 대체) -->
+        </div>
+
+        <!-- 제출 버튼 -->
+        <button class="form-submit" id="btnSubmitNew" onclick="submitNew()" style="background:#7c3aed;">
+            📋 템플릿 기반 일지 만들기
+        </button>
+    </div>
+
+    <!-- ══ 탭2: 인쇄 설정 ═══════════════════════════════════ -->
+    <div class="tab-pane" id="pane-print">
+
+        <!-- 나침반형 여백 미리보기 -->
+        <div class="sec">
+            <div class="sec-title">📄 용지 여백 미리보기</div>
+            <div class="compass" id="compass">
+                <div class="compass-center">A4<br>2페이지</div>
+                <div class="compass-val cv-top" id="cv_top">1.5</div>
+                <div class="compass-val cv-bottom" id="cv_bottom">1.5</div>
+                <div class="compass-val cv-left" id="cv_left">1.5</div>
+                <div class="compass-val cv-right" id="cv_right">1.5</div>
+            </div>
+            <div style="text-align:center;font-size:10px;color:#94a3b8;">단위: cm</div>
+        </div>
+
+        <!-- 여백 조정 -->
+        <div class="sec">
+            <div class="sec-title">↔ 여백 조정 (cm)</div>
+
+            <!-- 프리셋 -->
+            <div style="font-size:10px;color:#64748b;margin-bottom:6px;">빠른 프리셋</div>
+            <div class="preset-row">
+                <button class="preset-btn" onclick="applyPreset(2.5,2.5,2.5,2.5)">넓게<br><small>2.5cm</small></button>
+                <button class="preset-btn on" onclick="applyPreset(1.5,1.5,1.5,1.5)">기본<br><small>1.5cm</small></button>
+                <button class="preset-btn" onclick="applyPreset(1.0,1.0,1.0,1.0)">좁게<br><small>1.0cm</small></button>
+                <button class="preset-btn" onclick="applyPreset(2.0,2.0,1.5,1.5)">상하↔<br><small>혼합</small></button>
+            </div>
+
+            <!-- 슬라이더 -->
+            <div class="margin-grid">
+                <div class="margin-item">
+                    <div class="margin-label">위 여백 <span id="lbl_top">1.5 cm</span></div>
+                    <input type="range" class="margin-slider" id="sl_top" min="0.5" max="4" step="0.1" value="1.5"
+                        oninput="syncMargin('top',this.value)">
+                    <div class="margin-val">▲</div>
+                </div>
+                <div class="margin-item">
+                    <div class="margin-label">아래 여백 <span id="lbl_bottom">1.5 cm</span></div>
+                    <input type="range" class="margin-slider" id="sl_bottom" min="0.5" max="4" step="0.1" value="1.5"
+                        oninput="syncMargin('bottom',this.value)">
+                    <div class="margin-val">▼</div>
+                </div>
+                <div class="margin-item">
+                    <div class="margin-label">왼쪽 여백 <span id="lbl_left">1.5 cm</span></div>
+                    <input type="range" class="margin-slider" id="sl_left" min="0.5" max="4" step="0.1" value="1.5"
+                        oninput="syncMargin('left',this.value)">
+                    <div class="margin-val">◀</div>
+                </div>
+                <div class="margin-item">
+                    <div class="margin-label">오른쪽 여백 <span id="lbl_right">1.5 cm</span></div>
+                    <input type="range" class="margin-slider" id="sl_right" min="0.5" max="4" step="0.1" value="1.5"
+                        oninput="syncMargin('right',this.value)">
+                    <div class="margin-val">▶</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 적용 -->
+        <div class="sec">
+            <button class="apply-btn" id="btnApply" onclick="applyPrint()">
+                🖨 현재 시트에 인쇄 설정 적용
+            </button>
+            <div class="info-box">
+                <b>📌 A4 2페이지 자동 맞춤</b>
+                용지: A4 세로 &middot; 2페이지 맞춤<br>
+                눈금선 숨김 &middot; 가로 중앙 정렬<br>
+                적용 후 <b>파일 → 인쇄(Ctrl+P)</b>로 확인하세요.
+            </div>
+        </div>
+
+        <!-- 현재 설정 읽기 -->
+        <div class="sec">
+            <div class="sec-title">🔄 현재 시트 설정 읽기</div>
+            <button class="preset-btn" style="width:100%;padding:7px;" onclick="readPrintSettings()">
+                현재 시트 여백 불러오기
+            </button>
+        </div>
+    </div>
+
+    <!-- 상태바 -->
+    <div class="statusbar">
+        <div class="dot loading" id="dot"></div>
+        <span id="statusMsg"><span id="statusEl">연결 중...</span></span>
+        <!-- 너비 빠른 조절 버튼 -->
+        <button class="wbtn" onclick="setW(280)" id="wb280" title="좁게">S</button>
+        <button class="wbtn on" onclick="setW(320)" id="wb320" title="기본">M</button>
+        <button class="wbtn" onclick="setW(420)" id="wb420" title="넓게">L</button>
+        <button class="wbtn" onclick="setW(560)" id="wb560" title="매우 넓게">XL</button>
+    </div>
+
+    <script>
+        // ══ 상태 ══
+        let items = [], active = null;
+        let margins = { top: 1.5, bottom: 1.5, left: 1.5, right: 1.5 };
+        let currentWidth = 320; // 현재 사이드바 너비(px)
+
+        window.onload = () => {
+            loadList();
+            initDragResize();
+            // 사이드바 재오픈 시 이전에 활성화된 일지 복구
+            google.script.run
+                .withSuccessHandler(savedTitle => {
+                    if (savedTitle && !active) {
+                        active = savedTitle;
+                        setCurBanner(savedTitle);
+                        setStatus('ok', '📄 "' + savedTitle + '" 이어서 작업 중');
+                    }
+                })
+                .getActiveTitle();
+            // 템플릿 정보 로드
+            loadTemplateInfo();
+        };
+
+        // ══ 드래그 리사이즈 ══════════════════════════════════════
+        function initDragResize() {
+            const handle = document.getElementById('drag-handle');
+            const badge = document.getElementById('width-badge');
+            let dragging = false, startX = 0, startW = 0;
+
+            handle.addEventListener('mousedown', e => {
+                dragging = true;
+                startX = e.clientX;
+                startW = currentWidth;
+                handle.classList.add('dragging');
+                document.body.style.userSelect = 'none';
+                document.body.style.pointerEvents = 'none';
+                handle.style.pointerEvents = 'auto';
+                badge.classList.add('show');
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', e => {
+                if (!dragging) return;
+                // 오른쪽으로 드래그 = 사이드바 넓어짐 (왼쪽 핸들이므로 반전)
+                const delta = startX - e.clientX;
+                const newW = Math.min(700, Math.max(220, startW + delta));
+                if (Math.abs(newW - currentWidth) >= 2) {
+                    currentWidth = newW;
+                    badge.textContent = newW + 'px';
+                    google.script.host.setWidth(newW);
+                    updateWBtns(newW);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (!dragging) return;
+                dragging = false;
+                handle.classList.remove('dragging');
+                document.body.style.userSelect = '';
+                document.body.style.pointerEvents = '';
+                handle.style.pointerEvents = '';
+                setTimeout(() => badge.classList.remove('show'), 800);
+            });
+
+            // 터치 지원
+            handle.addEventListener('touchstart', e => {
+                startX = e.touches[0].clientX;
+                startW = currentWidth;
+                badge.classList.add('show');
+                dragging = true;
+            }, { passive: true });
+
+            document.addEventListener('touchmove', e => {
+                if (!dragging) return;
+                const delta = startX - e.touches[0].clientX;
+                const newW = Math.min(700, Math.max(220, startW + delta));
+                if (Math.abs(newW - currentWidth) >= 2) {
+                    currentWidth = newW;
+                    badge.textContent = newW + 'px';
+                    google.script.host.setWidth(newW);
+                    updateWBtns(newW);
+                }
+            }, { passive: true });
+
+            document.addEventListener('touchend', () => {
+                dragging = false;
+                setTimeout(() => badge.classList.remove('show'), 800);
+            });
+        }
+
+        // 너비 버튼 클릭
+        function setW(w) {
+            currentWidth = w;
+            google.script.host.setWidth(w);
+            updateWBtns(w);
+            // 뱃지 잠깐 표시
+            const badge = document.getElementById('width-badge');
+            badge.textContent = w + 'px';
+            badge.classList.add('show');
+            setTimeout(() => badge.classList.remove('show'), 1000);
+        }
+
+        function updateWBtns(w) {
+            const map = { wb280: 280, wb320: 320, wb420: 420, wb560: 560 };
+            Object.entries(map).forEach(([id, v]) => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('on', v === w);
+            });
+        }
+
+        // ── 탭 전환 ──
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('on'));
+            el.classList.add('on');
+            document.getElementById('pane-' + id).classList.add('on');
+        }
+
+        // ══ 목록 탭 ══════════════════════════════════════════════
+
+        function loadList() {
+            setStatus('loading', '불러오는 중...');
+            setBtns(true);
+            document.getElementById('listEl').innerHTML =
+                '<div class="loading"><div class="spin"></div><span>불러오는 중...</span></div>';
+            google.script.run
+                .withSuccessHandler(data => {
+                    items = data || [];
+                    render();
+                    setStatus('ok', items.length + '건 로드됨');
+                    setBtns(false);
+                })
+                .withFailureHandler(err => {
+                    setStatus('err', '로드 실패');
+                    setBtns(false);
+                    document.getElementById('listEl').innerHTML =
+                        '<div class="empty"><div class="empty-ico">⚠️</div>' +
+                        '<p>목록을 불러오지 못했어요.<br>스프레드시트를 새로고침 후<br>다시 시도해주세요.</p></div>';
+                })
+                .getJournalList();
+        }
+
+        function render() {
+            const q = document.getElementById('searchInp').value.toLowerCase();
+            const f = q ? items.filter(it => (it.name + it.date + it.manager).toLowerCase().includes(q)) : items;
+            document.getElementById('cntEl').textContent =
+                '총 ' + items.length + '건' + (q ? ' · 검색 ' + f.length + '건' : '');
+            if (!f.length) {
+                document.getElementById('listEl').innerHTML =
+                    '<div class="empty"><div class="empty-ico">📋</div><p>' +
+                    (q ? '검색 결과가 없어요.' :
+                        '저장된 일지가 없어요.<br>＋ 새 일지 버튼으로 만들어보세요!') +
+                    '</p></div>';
+                return;
+            }
+            document.getElementById('listEl').innerHTML = f.map(it => `
+    <div class="item ${it.name === active ? 'active' : ''}" onclick="goTo('${esc(it.name)}')">
+      <div class="item-date">${it.date}</div>
+      <div class="item-name">${it.name}</div>
+      <div class="item-meta">${it.manager ? '👤 ' + it.manager + '&nbsp;&nbsp;' : ''}⏱ ${it.savedAt}</div>
+      <div class="item-btns">
+        <button class="ibtn" onclick="event.stopPropagation();goTo('${esc(it.name)}')">📂 열기</button>
+        <button class="ibtn del" onclick="event.stopPropagation();onDelete('${esc(it.name)}')">🗑 삭제</button>
+      </div>
+    </div>`).join('');
+        }
+
+        function onNew() {
+            // 폼 패널을 표시 (confirm 대신)
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const todayStr = `${yyyy}-${mm}-${dd}`;
+
+            document.getElementById('f_date').value = todayStr;
+            document.getElementById('f_manager').value = '';
+            autoTitle();
+
+            // 목록 숨기고 폼 표시
+            document.getElementById('pane-list').style.display = 'none';
+            const np = document.getElementById('pane-new');
+            np.classList.add('show');
+        }
+
+        // 템플릿 편집 버튼 클릭
+        function onEditTemplate() {
+            const btn = document.getElementById('btnTmpl');
+            btn.disabled = true;
+            setStatus('loading', '템플릿 시트 열기...');
+            google.script.run
+                .withSuccessHandler(r => {
+                    btn.disabled = false;
+                    if (r.ok) {
+                        setStatus('ok', '📝 템플릿 시트가 열렸어요. 내용을 수정하세요!');
+                        // 템플릿 정보 다시 로드
+                        loadTemplateInfo();
+                    } else {
+                        setStatus('err', r.error || '템플릿 열기 실패');
+                    }
+                })
+                .withFailureHandler(err => {
+                    btn.disabled = false;
+                    setStatus('err', '오류: ' + err.message);
+                })
+                .editTemplate();
+        }
+
+        // 템플릿 정보 로드 및 표시
+        function loadTemplateInfo() {
+            google.script.run
+                .withSuccessHandler(info => {
+                    const banner = document.getElementById('tmplBanner');
+                    const infoEl = document.getElementById('tmplInfo');
+                    if (info && info.exists) {
+                        const parts = [];
+                        if (info.manager) parts.push('담당: ' + info.manager);
+                        if (info.opTime) parts.push(info.opTime);
+                        infoEl.textContent = parts.length ? parts.join(' · ') : '템플릿 설정됨';
+                        banner.classList.add('show');
+                    } else {
+                        infoEl.textContent = '아직 없음 → 템플릿 수정 클릭';
+                        banner.classList.add('show');
+                    }
+                })
+                .withFailureHandler(() => { })
+                .getTemplateInfo();
+        }
+
+        function hideNewForm() {
+            document.getElementById('pane-new').classList.remove('show');
+            document.getElementById('pane-list').style.display = 'flex';
+        }
+
+        function autoTitle() {
+            const d = document.getElementById('f_date').value;
+            if (!d) return;
+            const days = ['일', '월', '화', '수', '목', '금', '토'];
+            const dt = new Date(d);
+            const m = dt.getUTCMonth() + 1;
+            const day = dt.getUTCDate();
+            const wd = dt.getUTCDay();
+            document.getElementById('f_title').value = `${m}월 ${day}일 ${days[wd]}`;
+        }
+
+        function submitNew() {
+            const type = document.getElementById('f_type').value;
+            const record = document.getElementById('f_record').value;
+            const date = document.getElementById('f_date').value;
+            const manager = document.getElementById('f_manager').value.trim();
+
+            // 필수값 검증
+            if (!date) { alert('일자를 입력해주세요.'); document.getElementById('f_date').focus(); return; }
+            if (!manager) { alert('담당자를 입력해주세요.'); document.getElementById('f_manager').focus(); return; }
+
+            const btn = document.getElementById('btnSubmitNew');
+            btn.disabled = true;
+            btn.textContent = '⏳ 생성 중... (템플릿 복사 중)';
+            setStatus('loading', '템플릿 복사 + 목록 등록 중...');
+
+            // ★ 단 1번의 서버 호출로 생성+등록+목록반환 완료 (템플릿 기반)
+            google.script.run
+                .withSuccessHandler(r => {
+                    btn.disabled = false;
+                    btn.innerHTML = '📋 템플릿 기반 일지 만들기';
+                    if (r.ok) {
+                        hideNewForm();
+                        active = r.name;
+
+                        // 서버에서 이미 목록을 받아왔으므로 바로 렌더링 (추가 호출 불필요)
+                        items = r.list || [];
+                        render();
+                        document.getElementById('cntEl').textContent =
+                            '총 ' + items.length + '건';
+
+                        setCurBanner(r.name);
+                        showGuideCard();
+
+                        const msg = r.overwritten
+                            ? '🔄 "' + r.name + '" 덮어쓰기 완료! 목록 등록됨'
+                            : '✅ "' + r.name + '" 생성 완료! 목록 등록됨';
+                        setStatus('ok', msg);
+                    } else {
+                        // 에러를 눈에 잘 보이게 표시
+                        const errMsg = r.error || '생성 실패 (원인 불명)';
+                        setStatus('err', errMsg);
+                        alert('⚠️ 일지 생성 실패\n\n' + errMsg + '\n\nApps Script 에디터에서 코드를 저장했는지 확인하세요.');
+                    }
+                })
+                .withFailureHandler(err => {
+                    btn.disabled = false;
+                    btn.innerHTML = '📋 템플릿 기반 일지 만들기';
+                    const msg = (err && err.message) ? err.message : String(err);
+                    setStatus('err', '서버 오류: ' + msg);
+                    alert('⚠️ 서버 오류\n\n' + msg + '\n\nApps Script 에디터에서 코드를 저장(Ctrl+S) 후 다시 시도하세요.');
+                })
+                .createFromTemplate({ type, record, date, manager });
+        }
+
+        // 안내 카드 표시/숨김
+        function showGuideCard() {
+            document.getElementById('guide-card').classList.add('show');
+        }
+        function closeGuide() {
+            document.getElementById('guide-card').classList.remove('show');
+        }
+
+        // 현재 열린 시트 배너 업데이트
+        function setCurBanner(name) {
+            const b = document.getElementById('curBanner');
+            const n = document.getElementById('curName');
+            if (name) {
+                n.textContent = name;
+                b.classList.add('show');
+            } else {
+                b.classList.remove('show');
+            }
+        }
+
+        function onSave() {
+            if (!active) {
+                setStatus('err', '저장할 일지가 없어요. 먼저 일지를 선택하거나 만들어 주세요.');
+                return;
+            }
+            setBtns(true);
+            setStatus('loading', '"' + active + '" 저장 중...');
+            google.script.run
+                .withSuccessHandler(r => {
+                    setBtns(false);
+                    if (r.ok) {
+                        // 서버에서 목록 반환 → 즉시 렌더링
+                        items = r.list || [];
+                        render();
+                        document.getElementById('cntEl').textContent = '총 ' + items.length + '건';
+                        setCurBanner(r.name);
+                        setStatus('ok', '💾 "' + r.name + '" 저장 완료 ✓');
+                    } else {
+                        setStatus('err', r.error || '저장 실패');
+                    }
+                })
+                .withFailureHandler(err => {
+                    setBtns(false);
+                    setStatus('err', '저장 실패: ' + err.message);
+                })
+                .saveCurrentData(active);
+        }
+
+        function goTo(name) {
+            active = name; render();
+            setCurBanner(name);
+            setStatus('loading', '"' + name + '" 불러오는 중...');
+            google.script.run
+                .withSuccessHandler(r => {
+                    if (r.ok) {
+                        setStatus('ok', '📄 "' + name + '" 로드됨 · 수정 후 목록 등록 누르세요');
+                    } else {
+                        setStatus('err', r.error || '로드 실패');
+                    }
+                })
+                .withFailureHandler(err => setStatus('err', err.message))
+                .loadEntry(name);
+        }
+
+        function onDelete(name) {
+            if (!confirm('"' + name + '"을 삭제할까요?\n이 작업은 되돌릴 수 없어요.')) return;
+            setStatus('loading', '삭제 중...');
+            google.script.run
+                .withSuccessHandler(r => {
+                    if (r.ok) {
+                        if (active === name) { active = null; setCurBanner(null); }
+                        // 서버에서 목록 반환 → 즉시 렌더링
+                        items = r.list || [];
+                        render();
+                        document.getElementById('cntEl').textContent = '총 ' + items.length + '건';
+                        setStatus('ok', '🗑 삭제 완료');
+                    } else {
+                        setStatus('err', r.error || '삭제 실패');
+                    }
+                })
+                .withFailureHandler(err => setStatus('err', err.message))
+                .deleteEntry(name);
+        }
+
+        // ══ 인쇄 설정 탭 ═════════════════════════════════════════
+
+        function syncMargin(side, val) {
+            val = parseFloat(val);
+            margins[side] = val;
+            document.getElementById('lbl_' + side).textContent = val.toFixed(1) + ' cm';
+            document.getElementById('cv_' + side).textContent = val.toFixed(1);
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('on'));
+        }
+
+        function applyPreset(top, bottom, left, right) {
+            margins = { top, bottom, left, right };
+            ['top', 'bottom', 'left', 'right'].forEach(s => {
+                document.getElementById('sl_' + s).value = margins[s];
+                document.getElementById('lbl_' + s).textContent = parseFloat(margins[s]).toFixed(1) + ' cm';
+                document.getElementById('cv_' + s).textContent = parseFloat(margins[s]).toFixed(1);
+            });
+            // 프리셋 하이라이트
+            const presets = [[2.5, 2.5, 2.5, 2.5], [1.5, 1.5, 1.5, 1.5], [1.0, 1.0, 1.0, 1.0]];
+            document.querySelectorAll('.preset-btn').forEach((b, i) => {
+                if (i < presets.length) {
+                    const [t, bt, l, r] = presets[i];
+                    b.classList.toggle('on', top === t && bottom === bt && left === l && right === r);
+                }
+            });
+        }
+
+        function applyPrint() {
+            const btn = document.getElementById('btnApply');
+            btn.disabled = true;
+            setStatus('loading', '인쇄 설정 적용 중...');
+            google.script.run
+                .withSuccessHandler(r => {
+                    btn.disabled = false;
+                    setStatus(r.ok ? 'ok' : 'err', r.ok ? '"' + r.name + '" 인쇄 설정 적용 완료 ✓' : (r.error || '적용 실패'));
+                })
+                .withFailureHandler(err => {
+                    btn.disabled = false;
+                    setStatus('err', '적용 실패: ' + err.message);
+                })
+                .applyPrintSettingsSidebar(margins);
+        }
+
+        function readPrintSettings() {
+            setStatus('loading', '설정 읽는 중...');
+            google.script.run
+                .withSuccessHandler(r => {
+                    if (r.ok) {
+                        applyPreset(r.top, r.bottom, r.left, r.right);
+                        ['top', 'bottom', 'left', 'right'].forEach(s => {
+                            document.getElementById('sl_' + s).value = r[s];
+                            document.getElementById('lbl_' + s).textContent = parseFloat(r[s]).toFixed(1) + ' cm';
+                            document.getElementById('cv_' + s).textContent = parseFloat(r[s]).toFixed(1);
+                        });
+                        setStatus('ok', '현재 시트 여백 불러옴');
+                    } else {
+                        setStatus('err', r.error || '읽기 실패');
+                    }
+                })
+                .withFailureHandler(err => setStatus('err', '읽기 실패: ' + err.message))
+                .getPrintSettings();
+        }
+
+        // ── 공통 유틸 ──
+        function setStatus(type, msg) {
+            document.getElementById('dot').className = 'dot ' + type;
+            document.getElementById('statusEl').textContent = msg;
+        }
+        function setBtns(d) {
+            document.getElementById('btnNew').disabled = d;
+            document.getElementById('btnSave').disabled = d;
+        }
+        function esc(s) { return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+    </script>
+</body>
+
+</html>
